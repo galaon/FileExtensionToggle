@@ -17,14 +17,15 @@ $ErrorActionPreference = 'Stop'
 
 $KeyName   = 'FileExtensionToggle'
 $ScriptDir = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $MyInvocation.MyCommand.Definition }
+$IconDir   = Join-Path (Split-Path -Parent $ScriptDir) 'icons'
 
 . (Join-Path $ScriptDir 'Lang.ps1') -Language $Language
 if ([string]::IsNullOrWhiteSpace($MenuText)) { $MenuText = $L.MenuText }
 
 $Launcher = Join-Path $ScriptDir 'Run-Hidden.vbs'
 $Toggle   = Join-Path $ScriptDir 'ToggleFileExt.ps1'
-$IconOn   = Join-Path $ScriptDir 'icon-on.ico'      # 확장자 표시(ON)  - 파랑 / shown - blue
-$IconOff  = Join-Path $ScriptDir 'icon-off.ico'     # 확장자 숨김(OFF) - 회색 / hidden - gray
+$IconOn   = Join-Path $IconDir 'icon-on.ico'       # 확장자 표시(ON)  - 파랑 / shown - blue
+$IconOff  = Join-Path $IconDir 'icon-off.ico'      # 확장자 숨김(OFF) - 회색 / hidden - gray
 
 foreach ($f in @($Launcher, $Toggle, $IconOn, $IconOff)) {
     if (-not (Test-Path -LiteralPath $f)) {

@@ -9,7 +9,7 @@ echo   Install  /  설치
 echo ============================================
 echo.
 
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0Install.ps1"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0src\Install.ps1"
 
 echo.
 pause

@@ -1,123 +1,132 @@
-# File Extension Toggle
+# 파일 확장자 보기 토글 (File Extension Toggle)
 
-한국어 문서는 [README.ko.md](README.ko.md) 를 보십시오.
+For English, see [README.en.md](README.en.md).
 
-Toggle Windows Explorer's **"Hide extensions for known file types"** from the right-click menu.
-No Folder Options dialog, no Explorer restart — one click.
+Windows 우클릭 메뉴에서 **파일 확장자 표시/숨김**을 한 번에 전환합니다.
+폴더 옵션 창을 열 필요도, 탐색기를 재시작할 필요도 없습니다.
 
-- The menu item **shows the current state** — `File Extension Toggle ― [Current · ON]`
-- The **icon color follows the state** — blue when extensions are shown, gray when hidden
-- Switches **silently** (a popup appears only on error)
-- **No admin rights** required (writes to `HKCU` only)
-- **No Explorer restart** (refreshes via `SHChangeNotify`)
-- **UI language follows Windows** — Korean on a Korean display language, English otherwise
-- No dependencies beyond what ships with Windows (PowerShell + wscript)
+- 우클릭 메뉴에 **현재 상태 표시** — `파일 확장자 보기 토글 ― [현재 · ON]`
+- 상태에 따라 **아이콘 색도 변경** — ON 은 파랑, OFF 는 회색
+- 확인창 없이 **조용히** 전환 (오류가 났을 때만 알림)
+- 관리자 권한 **불필요** (현재 사용자 `HKCU` 에만 기록)
+- 탐색기 재시작 **불필요** (`SHChangeNotify` 로 즉시 반영)
+- **OS 표시 언어를 따라** 한국어/영어 자동 전환
+- Windows 기본 구성요소만 사용 (PowerShell + wscript)
 
-## Files
+## 구성 파일
 
-| File | Purpose |
-|------|---------|
-| **`Install.bat`** | **Double-click to install** |
-| **`Uninstall.bat`** | **Double-click to uninstall** |
-| `Install.ps1` | Registers the menu item |
-| `Uninstall.ps1` | Removes the menu item |
-| `ToggleFileExt.ps1` | The toggle itself (flip `HideFileExt`, refresh Explorer, update the menu) |
-| `Run-Hidden.vbs` | Launches the toggle with no console window |
-| `Lang.ps1` | Korean / English string table |
-| `icon-on.ico` / `icon-off.ico` | State icons (blue / gray) |
-| `icon-source.svg` | Original icon artwork |
-
-## Install
-
-**Double-click `Install.bat`.** That's it — no admin rights needed.
-
-The batch file calls PowerShell with `-ExecutionPolicy Bypass`, so you don't have to change
-your system's execution policy.
-
-To force a language or set a custom menu name, run the script directly:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File ".\Install.ps1" -Language en
-powershell -ExecutionPolicy Bypass -File ".\Install.ps1" -MenuText "Show extensions"
+```
+FileExtensionToggle/
+├── Install.bat        ← 더블클릭 설치
+├── Uninstall.bat      ← 더블클릭 제거
+├── README.md          ← 이 문서
+├── README.en.md       ← English
+├── LICENSE
+├── src/               ← 스크립트
+│   ├── Install.ps1        우클릭 메뉴에 항목 등록
+│   ├── Uninstall.ps1      등록한 메뉴 항목 제거
+│   ├── ToggleFileExt.ps1  실제 토글 (HideFileExt 반전 + 탐색기 갱신 + 메뉴 갱신)
+│   ├── Run-Hidden.vbs     콘솔 창 없이 토글을 실행하는 런처
+│   └── Lang.ps1           한국어/영어 문자열 테이블
+└── icons/             ← 아이콘
+    ├── icon-on.ico        확장자 표시(ON) - 파랑
+    ├── icon-off.ico       확장자 숨김(OFF) - 회색
+    └── icon-source.svg    원본 SVG
 ```
 
-Registered under `HKCU` in three places — a folder's empty space, the desktop, and a folder icon.
+평소에는 루트의 `Install.bat` / `Uninstall.bat` 두 개만 쓰면 됩니다.
 
-## Usage
+## 설치
 
-Right-click the desktop or an empty spot in a folder →
-**File Extension Toggle ― [Current · OFF]**
+**`Install.bat` 을 더블클릭하십시오.** 그게 전부이고, 관리자 권한도 필요 없습니다.
 
-- No window appears; it switches immediately.
-- Open Explorer windows update **without a manual refresh**.
-- Next time you right-click, the label reads **`[Current · ON]`** and the icon has turned blue.
+`.bat` 이 내부에서 `-ExecutionPolicy Bypass` 로 PowerShell 을 부르므로
+시스템 실행 정책을 따로 바꿀 필요가 없습니다.
 
-`ON` = extensions visible, `OFF` = extensions hidden.
+언어를 강제하거나 메뉴 이름을 바꾸려면 스크립트를 직접 실행합니다:
 
-> **On Windows 11**, registry-based menu items don't appear in the simplified context menu.
-> Click **[Show more options]** or press `Shift + F10` to reach the classic menu.
+```powershell
+powershell -ExecutionPolicy Bypass -File ".\src\Install.ps1" -Language en
+powershell -ExecutionPolicy Bypass -File ".\src\Install.ps1" -MenuText "확장자 보기"
+```
 
-## Uninstall
+등록 위치는 `HKCU` 세 곳입니다 — 폴더 빈 공간, 바탕화면, 폴더 아이콘.
 
-**Double-click `Uninstall.bat`.** Only the menu item is removed; your extension setting is left as is.
+## 사용
 
-## How it works
+바탕화면이나 탐색기 폴더의 빈 공간을 우클릭 →
+**파일 확장자 보기 토글 ― [현재 · OFF]** 클릭.
 
-One registry value gets flipped:
+- 클릭하면 **아무 창도 뜨지 않고** 즉시 전환됩니다.
+- 열려 있는 탐색기 창이 **새로고침 없이 바로** 갱신됩니다.
+- 다시 우클릭하면 라벨이 **`[현재 · ON]`** 으로, 아이콘은 파란색으로 바뀌어 있습니다.
+
+`ON` = 확장자 보임, `OFF` = 확장자 숨김.
+
+> **Windows 11 사용자 주의**
+> 간소화된 새 우클릭 메뉴에는 레지스트리 방식 항목이 나타나지 않습니다.
+> **[추가 옵션 표시]** 를 누르거나 `Shift + F10` 으로 클래식 메뉴를 여십시오.
+
+## 제거
+
+**`Uninstall.bat` 을 더블클릭하십시오.** 메뉴 항목만 지우고, 확장자 설정 자체는 그대로 둡니다.
+
+## 동작 원리
+
+레지스트리 값 하나를 뒤집습니다.
 
 ```
 HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced
     HideFileExt (DWORD)
-        1 = extensions hidden (Windows default)
-        0 = extensions shown
+        1 = 확장자 숨김 (Windows 기본값)
+        0 = 확장자 표시
 ```
 
-Then `shell32.dll!SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_FLUSH, ...)` tells open Explorer
-windows to refresh. `SHCNF_FLUSH` waits until the notification is actually processed, so the
-change lands immediately. Explorer is never killed or restarted, so your open windows survive.
+값을 바꾼 뒤 `shell32.dll!SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_FLUSH, ...)` 를 호출해
+열려 있는 탐색기 창을 갱신합니다. `SHCNF_FLUSH` 는 알림이 실제로 처리될 때까지 기다리게 하므로
+반영이 즉각적입니다. 탐색기를 강제 종료하지 않으니 열어둔 창과 작업 상태가 유지됩니다.
 
-### How the state ends up in the menu
+### 메뉴에 상태가 표시되는 원리
 
-Explorer **re-reads the label and icon from the registry every time the menu opens.** So right
-after flipping the value, the toggle script rewrites each menu key's default value as
+Explorer 는 메뉴를 열 때마다 **라벨과 아이콘을 레지스트리에서 다시 읽습니다.**
+그래서 토글 직후 각 메뉴 키의 기본값을
 
 ```
-File Extension Toggle ― [Current · ON]
+파일 확장자 보기 토글 ― [현재 · ON]
 ```
 
-and points `Icon` at `icon-on.ico` or `icon-off.ico`. The plain name is kept in `BaseMenuText`
-and the chosen language in `LangCode`, so the label is rebuilt consistently every time.
-That gets a state-aware menu item without a COM shell-extension DLL.
+처럼 새로 쓰고, `Icon` 값도 `icon-on.ico` / `icon-off.ico` 로 바꿔 씁니다.
+원래 이름은 `BaseMenuText`, 설치 시 언어는 `LangCode` 값에 보관해 두고 매번 재조립합니다.
+덕분에 COM 셸 확장 DLL 없이도 라벨과 아이콘이 상태를 따라갑니다.
 
-## Icon
+## 아이콘
 
-The menu icon is [`heavy-six-point-asterisk` from Pinhead Map Icons](https://icon-sets.iconify.design/pinhead/heavy-six-point-asterisk/),
-converted into two multi-size `.ico` files (16 / 20 / 24 / 32 / 48 / 64 / 128 / 256 px).
+[Pinhead Map Icons 의 `heavy-six-point-asterisk`](https://icon-sets.iconify.design/pinhead/heavy-six-point-asterisk/) 를
+16 / 20 / 24 / 32 / 48 / 64 / 128 / 256 px 이 모두 담긴 멀티사이즈 `.ico` 두 개로 변환했습니다.
 
-| File | State | Color |
-|------|-------|-------|
-| `icon-on.ico` | extensions **shown** (ON) | blue `#0078D4` |
-| `icon-off.ico` | extensions **hidden** (OFF) | gray `#808080` |
+| 파일 | 상태 | 색 |
+|------|------|-----|
+| `icon-on.ico` | 확장자 **표시** (ON) | 파랑 `#0078D4` |
+| `icon-off.ico` | 확장자 **숨김** (OFF) | 회색 `#808080` |
 
-Both colors were picked to stay legible on light and dark menus.
-To use your own artwork, drop in two `.ico` files with the same names and run `Install.bat` again.
+두 색 모두 밝은 메뉴와 어두운 메뉴 양쪽에서 잘 보이도록 골랐습니다.
+다른 아이콘을 쓰려면 `icons/` 안의 `.ico` 두 개를 같은 이름으로 바꿔 넣고 `Install.bat` 을 다시 실행하십시오.
 
-## Notes and limits
+## 참고 / 제약
 
-- **Moving the folder breaks the menu** — the script and icon paths are stored as absolute paths.
-  Run `Install.bat` again from the new location (it overwrites the same keys).
-- The `[Current · XX]` label and the icon color are refreshed **when you toggle with this tool.**
-  Change the setting from Folder Options or another program and the label can briefly disagree
-  with reality; one click on the menu puts them back in sync. Tracking it perfectly would require
-  a dynamic context-menu handler (a COM DLL).
-- Language is decided at install time from your Windows display language and stored per menu item.
-  Change your display language and run `Install.bat` again to switch.
-- Nothing is shown on success. Errors raise a 6-second popup.
+- **폴더를 옮기면 메뉴가 깨집니다.** 스크립트와 아이콘 경로가 절대경로로 기록되기 때문입니다.
+  옮긴 뒤 새 위치에서 `Install.bat` 을 다시 실행하십시오 (같은 키를 덮어씁니다).
+- `[현재 · XX]` 와 아이콘 색은 **이 도구로 토글할 때** 갱신됩니다. 폴더 옵션 창이나 다른 프로그램으로
+  설정을 바꾸면 잠시 어긋날 수 있고, 메뉴를 한 번 클릭하면 다시 맞습니다.
+  매 순간 정확히 맞추려면 동적 컨텍스트 메뉴 핸들러(COM DLL)가 필요합니다.
+- 언어는 설치 시점의 Windows 표시 언어로 정해져 메뉴 항목에 저장됩니다.
+  표시 언어를 바꿨다면 `Install.bat` 을 다시 실행하십시오.
+- 성공 시에는 아무 창도 뜨지 않습니다. 오류일 때만 6초짜리 알림이 뜹니다.
 
-## License
+## 라이선스
 
-Code in this repository is released under the [MIT License](LICENSE).
-Made by 방모씨 (BangMossi).
+이 저장소의 코드는 [MIT License](LICENSE) 를 따릅니다.
+만든사람 : 방모씨
 
-The icon comes from [Pinhead Map Icons](https://github.com/waysidemapping/pinhead) by Quincy Morgan
-and is **CC0 1.0 (public domain)**.
+아이콘은 [Pinhead Map Icons](https://github.com/waysidemapping/pinhead) (제작: Quincy Morgan) 의
+`heavy-six-point-asterisk` 이며, 원본은 **CC0 1.0 (공개 도메인)** 입니다.

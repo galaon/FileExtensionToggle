@@ -16,6 +16,7 @@ $ErrorActionPreference = 'Stop'
 $AdvKey      = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced'
 $MenuKeyName = 'FileExtensionToggle'
 $ScriptDir   = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $MyInvocation.MyCommand.Definition }
+$IconDir     = Join-Path (Split-Path -Parent $ScriptDir) 'icons'
 $MenuBases = @(
     'HKCU:\Software\Classes\Directory\Background\shell'
     'HKCU:\Software\Classes\DesktopBackground\Shell'
@@ -48,7 +49,7 @@ public static extern void SHChangeNotify(int eventId, uint flags, System.IntPtr 
     # Explorer 는 메뉴를 열 때마다 라벨과 아이콘을 레지스트리에서 다시 읽습니다.
     # Explorer re-reads both from the registry every time the menu opens.
     $state = if ($new -eq 0) { 'ON' } else { 'OFF' }
-    $icon  = Join-Path $ScriptDir $(if ($new -eq 0) { 'icon-on.ico' } else { 'icon-off.ico' })
+    $icon  = Join-Path $IconDir $(if ($new -eq 0) { 'icon-on.ico' } else { 'icon-off.ico' })
 
     foreach ($base in $MenuBases) {
         $key = Join-Path $base $MenuKeyName

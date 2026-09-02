@@ -9,7 +9,7 @@ echo   Uninstall  /  제거
 echo ============================================
 echo.
 
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0Uninstall.ps1"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0src\Uninstall.ps1"
 
 echo.
 pause
