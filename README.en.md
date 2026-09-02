@@ -5,6 +5,12 @@
 Toggle Windows Explorer's **"Hide extensions for known file types"** from the right-click menu.
 No Folder Options dialog, no Explorer restart — one click.
 
+<a href="https://github.com/galaon/FileExtensionToggle/releases/latest/download/FileExtensionToggle.zip">
+  <img src="https://img.shields.io/badge/%E2%AC%87%20Download-Latest%20release-0078D4?style=for-the-badge" alt="Download latest release">
+</a>
+
+Unzip anywhere, then double-click **`Install.bat`**. That's it.
+
 - The menu item **shows the current state** — `File Extension Toggle ― [Current · ON]`
 - The **icon color follows the state** — blue when extensions are shown, gray when hidden
 - Switches **silently** (a popup appears only on error)
