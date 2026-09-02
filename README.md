@@ -2,9 +2,7 @@
 
 ![파일 확장자 보기 토글 — 우클릭 메뉴](docs/context-menu.png)
 
-<a href="https://github.com/galaon/FileExtensionToggle/releases/latest/download/FileExtensionToggle.zip">
-  <img src="https://img.shields.io/badge/%E2%AC%87%20%EC%A6%89%EC%8B%9C%20%EB%8B%A4%EC%9A%B4%EB%A1%9C%EB%93%9C-%EC%B5%9C%EC%8B%A0%20%EB%B2%84%EC%A0%84-0078D4?style=for-the-badge" alt="즉시 다운로드">
-</a>
+## [즉시 다운로드](https://github.com/galaon/FileExtensionToggle/releases/latest/download/FileExtensionToggle.zip)
 
 
 <BR>누군가는 한번쯤 필요한 상황이 있을 것 같아서 만든,<BR>
