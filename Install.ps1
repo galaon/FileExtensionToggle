@@ -1,23 +1,34 @@
 ﻿# Install.ps1
-# 마우스 우클릭 메뉴에 "파일 확장자 표시/숨김 ― [현재 · ON/OFF]" 항목을 등록합니다.
-# HKCU에만 쓰므로 관리자 권한이 필요 없습니다.
+# 마우스 우클릭 메뉴에 "파일 확장자 보기 토글 ― [현재 · ON/OFF]" 항목을 등록합니다.
+# Registers a "File Extension Toggle ― [Current · ON/OFF]" item in the right-click menu.
+# HKCU 에만 쓰므로 관리자 권한이 필요 없습니다. / Writes to HKCU only, no admin rights needed.
+#
+#   -Language  auto(기본, OS 표시 언어를 따름) / ko / en
+#   -MenuText  메뉴 이름을 직접 지정 (생략하면 언어에 맞는 기본 이름)
 
 param(
-    [string]$MenuText = '파일 확장자 표시/숨김'
+    [ValidateSet('auto','ko','en')]
+    [string]$Language = 'auto',
+
+    [string]$MenuText
 )
 
 $ErrorActionPreference = 'Stop'
 
 $KeyName   = 'FileExtensionToggle'
 $ScriptDir = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $MyInvocation.MyCommand.Definition }
-$Launcher  = Join-Path $ScriptDir 'Run-Hidden.vbs'
-$Toggle    = Join-Path $ScriptDir 'ToggleFileExt.ps1'
-$IconOn    = Join-Path $ScriptDir 'icon-on.ico'      # 확장자 표시(ON)  - 파랑
-$IconOff   = Join-Path $ScriptDir 'icon-off.ico'     # 확장자 숨김(OFF) - 회색
+
+. (Join-Path $ScriptDir 'Lang.ps1') -Language $Language
+if ([string]::IsNullOrWhiteSpace($MenuText)) { $MenuText = $L.MenuText }
+
+$Launcher = Join-Path $ScriptDir 'Run-Hidden.vbs'
+$Toggle   = Join-Path $ScriptDir 'ToggleFileExt.ps1'
+$IconOn   = Join-Path $ScriptDir 'icon-on.ico'      # 확장자 표시(ON)  - 파랑 / shown - blue
+$IconOff  = Join-Path $ScriptDir 'icon-off.ico'     # 확장자 숨김(OFF) - 회색 / hidden - gray
 
 foreach ($f in @($Launcher, $Toggle, $IconOn, $IconOff)) {
     if (-not (Test-Path -LiteralPath $f)) {
-        throw "필수 파일이 없습니다: $f"
+        throw ($L.MissingFile -f $f)
     }
 }
 
@@ -28,7 +39,7 @@ $AdvKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced'
 $hide   = (Get-ItemProperty -Path $AdvKey -Name 'HideFileExt' -ErrorAction SilentlyContinue).HideFileExt
 if ($null -eq $hide) { $hide = 1 }
 $state  = if ($hide -eq 0) { 'ON' } else { 'OFF' }
-$Label  = '{0} ― [현재 · {1}]' -f $MenuText, $state
+$Label  = $L.LabelFormat -f $MenuText, $state
 $Icon   = if ($hide -eq 0) { $IconOn } else { $IconOff }
 
 # 등록 위치: 폴더 빈 공간 / 바탕화면 / 폴더 자체
@@ -45,14 +56,15 @@ foreach ($base in $Targets) {
     New-Item -Path $cmd -Force | Out-Null
 
     Set-ItemProperty -Path $key -Name '(Default)'    -Value $Label
-    Set-ItemProperty -Path $key -Name 'BaseMenuText' -Value $MenuText   # 토글 스크립트가 라벨을 다시 만들 때 사용
+    Set-ItemProperty -Path $key -Name 'BaseMenuText' -Value $MenuText   # 토글 시 라벨 재조립용
+    Set-ItemProperty -Path $key -Name 'LangCode'     -Value $LangCode   # 토글 시 같은 언어 유지
     Set-ItemProperty -Path $key -Name 'Icon'         -Value $Icon
     Set-ItemProperty -Path $cmd -Name '(Default)'    -Value $Command
 
-    Write-Host "등록됨: $key"
+    Write-Host ($L.Registered -f $key)
 }
 
 Write-Host ''
-Write-Host "설치 완료. 현재 상태: [$state]"
-Write-Host '바탕화면이나 폴더 빈 공간을 우클릭하면 메뉴가 보입니다.'
-Write-Host 'Windows 11에서는 [추가 옵션 표시] (Shift+F10) 안에 나타납니다.'
+Write-Host ($L.InstallDone -f $state)
+Write-Host $L.InstallHint1
+Write-Host $L.InstallHint2
