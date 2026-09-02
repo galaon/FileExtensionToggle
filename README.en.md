@@ -14,6 +14,7 @@ Unzip anywhere, then double-click **`Install.bat`**. That's it.
 - Switches **silently** (a popup appears only on error)
 - **No admin rights** required (writes to `HKCU` only)
 - **No Explorer restart** (refreshes via `SHChangeNotify`)
+- **The downloaded folder can be deleted after installing** — everything needed is copied out
 - **UI language follows Windows** — Korean on a Korean display language, English otherwise
 - No dependencies beyond what ships with Windows (PowerShell + wscript)
 
@@ -70,9 +71,26 @@ Right-click the desktop or an empty spot in a folder →
 > **On Windows 11**, registry-based menu items don't appear in the simplified context menu.
 > Click **[Show more options]** or press `Shift + F10` to reach the classic menu.
 
+## Where it installs / deleting the download
+
+`Install.bat` copies everything needed into the folder below and registers the menu to run **that copy**.
+
+```
+%LOCALAPPDATA%\FileExtensionToggle\
+├── Uninstall.bat
+├── src\     Run-Hidden.vbs, ToggleFileExt.ps1, Lang.ps1, Uninstall.ps1
+└── icons\   icon-on.ico, icon-off.ico
+```
+
+So **once installed, the folder you downloaded and unzipped can be deleted.**
+The uninstaller is copied along with it, so removing the tool later is still easy.
+
 ## Uninstall
 
-**Double-click `Uninstall.bat`.** Only the menu item is removed; your extension setting is left as is.
+**Double-click `Uninstall.bat`.** If you already deleted the downloaded folder, run
+`%LOCALAPPDATA%\FileExtensionToggle\Uninstall.bat` instead.
+
+The menu item and the installed files are both removed; your extension setting is left as is.
 
 ## How it works
 
@@ -113,18 +131,13 @@ converted into two multi-size `.ico` files (16 / 20 / 24 / 32 / 48 / 64 / 128 / 
 | `icon-off.ico` | extensions **hidden** (OFF) | gray `#808080` |
 
 Both colors were picked to stay legible on light and dark menus.
-At install time both files are copied to **`%LOCALAPPDATA%\FileExtensionToggle\icons\`**, and the
-menu points at that copy. Moving or deleting the project folder never breaks the menu icon, and the
-files sit somewhere you won't disturb by accident. `Uninstall.bat` removes that folder too.
-
 To use your own artwork, replace the two `.ico` files in `icons/` (same names) and run
-`Install.bat` again to refresh the copy.
+`Install.bat` again to refresh the installed copy.
 
 ## Notes and limits
 
-- **Moving the folder breaks the menu** — the script path is stored as an absolute path.
-  Run `Install.bat` again from the new location (it overwrites the same keys).
-  Icons are unaffected: they live in `%LOCALAPPDATA%`.
+- Edits to `src/` or `icons/` only take effect after you run `Install.bat` again — the menu
+  runs the installed copy, not the folder you downloaded.
 - If you swap the artwork and the menu still shows the old icon, that's Explorer's icon cache.
   Run `Install.bat` again, or restart Explorer.
 - The `[Current · XX]` label and the icon color are refreshed **when you toggle with this tool.**

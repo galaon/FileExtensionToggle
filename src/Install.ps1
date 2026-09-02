@@ -17,34 +17,45 @@ $ErrorActionPreference = 'Stop'
 
 $KeyName   = 'FileExtensionToggle'
 $ScriptDir = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $MyInvocation.MyCommand.Definition }
-$IconSrc   = Join-Path (Split-Path -Parent $ScriptDir) 'icons'
-# 아이콘은 프로젝트 폴더가 아니라 사용자 앱 데이터 폴더에 복사해 두고 그쪽을 등록합니다.
-# 프로젝트 폴더를 옮기거나 지워도 메뉴 아이콘이 깨지지 않습니다.
-# Icons are copied into the per-user app-data folder and registered from there,
-# so moving or deleting the project folder never breaks the menu icon.
-$IconDir   = Join-Path $env:LOCALAPPDATA 'FileExtensionToggle\icons'
+$SourceRoot = Split-Path -Parent $ScriptDir
+
+# 실행에 필요한 파일을 모두 사용자 앱 데이터 폴더로 복사한 뒤 그 사본을 등록합니다.
+# 그래서 내려받은 폴더는 설치가 끝나면 지워도 됩니다.
+# Everything needed at run time is copied into the per-user app-data folder and the
+# menu points at that copy, so the downloaded folder can be deleted after installing.
+$InstallRoot = Join-Path $env:LOCALAPPDATA 'FileExtensionToggle'
+$InstallSrc  = Join-Path $InstallRoot 'src'
+$IconDir     = Join-Path $InstallRoot 'icons'
 
 . (Join-Path $ScriptDir 'Lang.ps1') -Language $Language
 if ([string]::IsNullOrWhiteSpace($MenuText)) { $MenuText = $L.MenuText }
 
-$Launcher = Join-Path $ScriptDir 'Run-Hidden.vbs'
-$Toggle   = Join-Path $ScriptDir 'ToggleFileExt.ps1'
+# 복사할 파일 / files to copy:  원본 -> 설치 경로
+$Payload = @(
+    @{ From = Join-Path $ScriptDir  'Run-Hidden.vbs';    To = $InstallSrc  }
+    @{ From = Join-Path $ScriptDir  'ToggleFileExt.ps1'; To = $InstallSrc  }
+    @{ From = Join-Path $ScriptDir  'Lang.ps1';          To = $InstallSrc  }
+    @{ From = Join-Path $ScriptDir  'Uninstall.ps1';     To = $InstallSrc  }
+    @{ From = Join-Path $SourceRoot 'Uninstall.bat';     To = $InstallRoot }
+    @{ From = Join-Path $SourceRoot 'icons\icon-on.ico';  To = $IconDir   }
+    @{ From = Join-Path $SourceRoot 'icons\icon-off.ico'; To = $IconDir   }
+)
 
-foreach ($f in @($Launcher, $Toggle)) {
-    if (-not (Test-Path -LiteralPath $f)) {
-        throw ($L.MissingFile -f $f)
-    }
+foreach ($item in $Payload) {
+    if (-not (Test-Path -LiteralPath $item.From)) { throw ($L.MissingFile -f $item.From) }
 }
 
-# --- 아이콘 복사 / copy the icons ---
-New-Item -ItemType Directory -Path $IconDir -Force | Out-Null
-foreach ($n in @('icon-on.ico', 'icon-off.ico')) {
-    $src = Join-Path $IconSrc $n
-    if (-not (Test-Path -LiteralPath $src)) { throw ($L.MissingFile -f $src) }
-    Copy-Item -LiteralPath $src -Destination (Join-Path $IconDir $n) -Force
+# --- 설치 경로로 복사 / copy everything into the install folder ---
+foreach ($dir in @($InstallRoot, $InstallSrc, $IconDir)) {
+    New-Item -ItemType Directory -Path $dir -Force | Out-Null
 }
-$IconOn  = Join-Path $IconDir 'icon-on.ico'    # 확장자 표시(ON)  - 파랑 / shown - blue
-$IconOff = Join-Path $IconDir 'icon-off.ico'   # 확장자 숨김(OFF) - 회색 / hidden - gray
+foreach ($item in $Payload) {
+    Copy-Item -LiteralPath $item.From -Destination $item.To -Force
+}
+
+$Launcher = Join-Path $InstallSrc 'Run-Hidden.vbs'
+$IconOn   = Join-Path $IconDir 'icon-on.ico'    # 확장자 표시(ON)  - 파랑 / shown - blue
+$IconOff  = Join-Path $IconDir 'icon-off.ico'   # 확장자 숨김(OFF) - 회색 / hidden - gray
 
 $Command = '"{0}" "{1}"' -f (Join-Path $env:SystemRoot 'System32\wscript.exe'), $Launcher
 
@@ -88,7 +99,7 @@ public static extern void SHChangeNotify(int eventId, uint flags, System.IntPtr 
 [Win32.Shell32Notify]::SHChangeNotify(0x08000000, 0x1000, [System.IntPtr]::Zero, [System.IntPtr]::Zero)
 
 Write-Host ''
-Write-Host ($L.IconsCopied -f $IconDir)
+Write-Host ($L.FilesCopied -f $InstallRoot)
 Write-Host ($L.InstallDone -f $state)
 Write-Host $L.InstallHint1
 Write-Host $L.InstallHint2
