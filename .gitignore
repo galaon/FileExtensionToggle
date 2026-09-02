@@ -1,0 +1,9 @@
+# Windows
+Thumbs.db
+desktop.ini
+*.lnk
+
+# 작업 중 산출물
+*.log
+*.tmp
+backups/
