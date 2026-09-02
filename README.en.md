@@ -109,12 +109,20 @@ converted into two multi-size `.ico` files (16 / 20 / 24 / 32 / 48 / 64 / 128 / 
 | `icon-off.ico` | extensions **hidden** (OFF) | gray `#808080` |
 
 Both colors were picked to stay legible on light and dark menus.
-To use your own artwork, replace the two `.ico` files in `icons/` (same names) and run `Install.bat` again.
+At install time both files are copied to **`%LOCALAPPDATA%\FileExtensionToggle\icons\`**, and the
+menu points at that copy. Moving or deleting the project folder never breaks the menu icon, and the
+files sit somewhere you won't disturb by accident. `Uninstall.bat` removes that folder too.
+
+To use your own artwork, replace the two `.ico` files in `icons/` (same names) and run
+`Install.bat` again to refresh the copy.
 
 ## Notes and limits
 
-- **Moving the folder breaks the menu** — the script and icon paths are stored as absolute paths.
+- **Moving the folder breaks the menu** — the script path is stored as an absolute path.
   Run `Install.bat` again from the new location (it overwrites the same keys).
+  Icons are unaffected: they live in `%LOCALAPPDATA%`.
+- If you swap the artwork and the menu still shows the old icon, that's Explorer's icon cache.
+  Run `Install.bat` again, or restart Explorer.
 - The `[Current · XX]` label and the icon color are refreshed **when you toggle with this tool.**
   Change the setting from Folder Options or another program and the label can briefly disagree
   with reality; one click on the menu puts them back in sync. Tracking it perfectly would require

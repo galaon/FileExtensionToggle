@@ -31,6 +31,13 @@ foreach ($base in $Bases) {
     }
 }
 
+# 설치 때 복사해 둔 아이콘 폴더도 정리 / clean up the copied icons
+$IconDir = Join-Path $env:LOCALAPPDATA 'FileExtensionToggle'
+if (Test-Path -LiteralPath $IconDir) {
+    Remove-Item -LiteralPath $IconDir -Recurse -Force
+    Write-Host ($L.Removed -f $IconDir)
+}
+
 if ($removed -eq 0) {
     Write-Host $L.RemoveNone
 } else {

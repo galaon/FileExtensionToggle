@@ -16,7 +16,12 @@ $ErrorActionPreference = 'Stop'
 $AdvKey      = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced'
 $MenuKeyName = 'FileExtensionToggle'
 $ScriptDir   = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $MyInvocation.MyCommand.Definition }
-$IconDir     = Join-Path (Split-Path -Parent $ScriptDir) 'icons'
+# 설치 시 복사해 둔 아이콘 폴더. 없으면 프로젝트 폴더의 원본을 씁니다.
+# The icon folder created at install time; falls back to the project's own copy.
+$IconDir     = Join-Path $env:LOCALAPPDATA 'FileExtensionToggle\icons'
+if (-not (Test-Path -LiteralPath $IconDir)) {
+    $IconDir = Join-Path (Split-Path -Parent $ScriptDir) 'icons'
+}
 $MenuBases = @(
     'HKCU:\Software\Classes\Directory\Background\shell'
     'HKCU:\Software\Classes\DesktopBackground\Shell'

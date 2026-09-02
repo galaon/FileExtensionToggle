@@ -17,21 +17,34 @@ $ErrorActionPreference = 'Stop'
 
 $KeyName   = 'FileExtensionToggle'
 $ScriptDir = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $MyInvocation.MyCommand.Definition }
-$IconDir   = Join-Path (Split-Path -Parent $ScriptDir) 'icons'
+$IconSrc   = Join-Path (Split-Path -Parent $ScriptDir) 'icons'
+# 아이콘은 프로젝트 폴더가 아니라 사용자 앱 데이터 폴더에 복사해 두고 그쪽을 등록합니다.
+# 프로젝트 폴더를 옮기거나 지워도 메뉴 아이콘이 깨지지 않습니다.
+# Icons are copied into the per-user app-data folder and registered from there,
+# so moving or deleting the project folder never breaks the menu icon.
+$IconDir   = Join-Path $env:LOCALAPPDATA 'FileExtensionToggle\icons'
 
 . (Join-Path $ScriptDir 'Lang.ps1') -Language $Language
 if ([string]::IsNullOrWhiteSpace($MenuText)) { $MenuText = $L.MenuText }
 
 $Launcher = Join-Path $ScriptDir 'Run-Hidden.vbs'
 $Toggle   = Join-Path $ScriptDir 'ToggleFileExt.ps1'
-$IconOn   = Join-Path $IconDir 'icon-on.ico'       # 확장자 표시(ON)  - 파랑 / shown - blue
-$IconOff  = Join-Path $IconDir 'icon-off.ico'      # 확장자 숨김(OFF) - 회색 / hidden - gray
 
-foreach ($f in @($Launcher, $Toggle, $IconOn, $IconOff)) {
+foreach ($f in @($Launcher, $Toggle)) {
     if (-not (Test-Path -LiteralPath $f)) {
         throw ($L.MissingFile -f $f)
     }
 }
+
+# --- 아이콘 복사 / copy the icons ---
+New-Item -ItemType Directory -Path $IconDir -Force | Out-Null
+foreach ($n in @('icon-on.ico', 'icon-off.ico')) {
+    $src = Join-Path $IconSrc $n
+    if (-not (Test-Path -LiteralPath $src)) { throw ($L.MissingFile -f $src) }
+    Copy-Item -LiteralPath $src -Destination (Join-Path $IconDir $n) -Force
+}
+$IconOn  = Join-Path $IconDir 'icon-on.ico'    # 확장자 표시(ON)  - 파랑 / shown - blue
+$IconOff = Join-Path $IconDir 'icon-off.ico'   # 확장자 숨김(OFF) - 회색 / hidden - gray
 
 $Command = '"{0}" "{1}"' -f (Join-Path $env:SystemRoot 'System32\wscript.exe'), $Launcher
 
@@ -65,7 +78,17 @@ foreach ($base in $Targets) {
     Write-Host ($L.Registered -f $key)
 }
 
+# 셸에 변경을 알려 메뉴 아이콘이 곧바로 반영되게 합니다 / tell the shell to pick the change up
+if (-not ('Win32.Shell32Notify' -as [type])) {
+    Add-Type -Namespace Win32 -Name Shell32Notify -MemberDefinition @'
+[System.Runtime.InteropServices.DllImport("shell32.dll", CharSet = System.Runtime.InteropServices.CharSet.Auto)]
+public static extern void SHChangeNotify(int eventId, uint flags, System.IntPtr item1, System.IntPtr item2);
+'@
+}
+[Win32.Shell32Notify]::SHChangeNotify(0x08000000, 0x1000, [System.IntPtr]::Zero, [System.IntPtr]::Zero)
+
 Write-Host ''
+Write-Host ($L.IconsCopied -f $IconDir)
 Write-Host ($L.InstallDone -f $state)
 Write-Host $L.InstallHint1
 Write-Host $L.InstallHint2
